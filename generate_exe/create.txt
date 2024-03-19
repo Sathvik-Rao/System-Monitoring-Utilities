@@ -1,0 +1,3 @@
+python -m PyInstaller --onefile --noconsole --icon=usb-drive.png script_usb.py
+python -m PyInstaller --onefile --noconsole --icon=volume.png script_audio.py
+python -m PyInstaller --onefile --noconsole --icon=monitor.png script_monitor.py
