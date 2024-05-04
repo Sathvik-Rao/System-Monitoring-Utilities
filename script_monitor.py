@@ -34,8 +34,16 @@ if enable_logging:
 def get_display_count(safe_monitor_name):
     try:
         # Run DumpEDID in a subprocess with no window
-        process = subprocess.Popen(["DumpEDID", "-a"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        process = subprocess.Popen(["DumpEDID", "-a"], 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.PIPE, 
+                                   text=True, 
+                                   creationflags=subprocess.CREATE_NO_WINDOW)
+        
         output, error = process.communicate()
+        
+        # Terminate the subprocess
+        process.kill()
 
         # Check for errors
         if process.returncode != 0:
