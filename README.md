@@ -27,7 +27,7 @@ This feature is crucial for maintaining the security and integrity of your syste
 
 ## Installation
 
-Here are the additional instructions you can add to your README.md file:
+Read `generate_exe/create.txt` on how to generate exe's or extract `scripts_exe.7z` 
 
 ## Additional Setup Instructions
 
