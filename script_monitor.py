@@ -5,7 +5,7 @@ import pystray
 import pyautogui
 from PIL import Image, ImageDraw, ImageFont
 import logging
-import subprocess
+import wexpect
 
 # Define necessary constants
 SM_CMONITORS = 80
@@ -33,22 +33,10 @@ if enable_logging:
 
 def get_display_count(safe_monitor_name):
     try:
-        # Run DumpEDID in a subprocess with no window
-        process = subprocess.Popen(["DumpEDID", "-a"], 
-                                   stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE, 
-                                   text=True, 
-                                   creationflags=subprocess.CREATE_NO_WINDOW)
-        
-        output, error = process.communicate()
-        
-        # Terminate the subprocess
-        process.kill()
-
-        # Check for errors
-        if process.returncode != 0:
-            logging.error(f"Error running DumpEDID: {error}")
-            return -1  
+        child = wexpect.spawn("dumpedid -a")
+        child.expect(wexpect.EOF)
+        output = child.before
+        child.close()
         
         monitor_names = [line.split(':')[-1].strip() for line in output.split('\n') if 'Monitor Name' in line]
         if safe_monitor_name in monitor_names:
@@ -136,6 +124,7 @@ def update_monitor_icon(icon):
         except Exception as e:
             # Log the error
             logging.error(f"Error in update_monitor_icon(): {e}")
+            
 
 def main():
     global update_monitor_event

@@ -1,3 +1,16 @@
 python -m PyInstaller --onefile --noconsole --icon=usb-drive.png script_usb.py
+
 python -m PyInstaller --onefile --noconsole --icon=volume.png script_audio.py
+
 python -m PyInstaller --onefile --noconsole --icon=monitor.png script_monitor.py
+
+read from -> https://github.com/raczben/wexpect/wiki/Wexpect-with-pyinstaller#create-wexpect-executable
+dist
+ ├─wexpect
+ │  ├─ ...
+ │  ├─ wexpect.exe
+ │  └─ ...
+ └─your_script
+    ├─ ...
+    ├─ your_script.exe
+    └─ ...
