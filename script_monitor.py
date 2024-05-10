@@ -31,12 +31,11 @@ enable_logging = False
 if enable_logging:
     logging.basicConfig(filename='error_monitor.log', level=logging.ERROR)
 
-def get_display_count(safe_monitor_name):
+def get_display_count(safe_monitor_name, child):
     try:
-        child = wexpect.spawn("dumpedid -a")
-        child.expect(wexpect.EOF)
+        child.sendline('dumpedid -a')
+        child.expect('>')
         output = child.before
-        child.close()
         
         monitor_names = [line.split(':')[-1].strip() for line in output.split('\n') if 'Monitor Name' in line]
         if safe_monitor_name in monitor_names:
@@ -93,9 +92,11 @@ def generate_monitor_icon(num_displays):
 
 def update_monitor_icon(icon):
     global safe_monitors, stop_monitor_thread, reload_time_in_seconds, safe_monitor_name
+    child = wexpect.spawn('cmd.exe')
+    child.expect('>')
     while not stop_monitor_thread.is_set():
         try:
-            num_displays = get_display_count(safe_monitor_name)
+            num_displays = get_display_count(safe_monitor_name, child)
             
             # Lock PC and show warning if a new monitor is connected
             if num_displays > safe_monitors:
@@ -124,6 +125,7 @@ def update_monitor_icon(icon):
         except Exception as e:
             # Log the error
             logging.error(f"Error in update_monitor_icon(): {e}")
+    child.close()
             
 
 def main():
