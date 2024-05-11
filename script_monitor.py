@@ -16,7 +16,7 @@ safe_monitor_name = "ParsecVDA"
 DEFAULT_MONITOR = 0
 
 # Global variable to keep track of reload time in seconds
-reload_time_in_seconds = 1
+reload_time_in_seconds = 1/3
 
 # Event to signal when the initial update is done
 update_monitor_event = threading.Event()
@@ -36,11 +36,8 @@ def get_display_count(safe_monitor_name, child):
         child.sendline('dumpedid -a')
         child.expect('>')
         output = child.before
-        
         monitor_names = [line.split(':')[-1].strip() for line in output.split('\n') if 'Monitor Name' in line]
-        if safe_monitor_name in monitor_names:
-            return len(monitor_names) - 1
-        return len(monitor_names)
+        return len([_ for _ in monitor_names if _ != safe_monitor_name])
     except Exception as e:
         # Log the error
         logging.error(f"Error in get_display_count(): {e}")
