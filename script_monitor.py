@@ -5,7 +5,11 @@ import pystray
 import pyautogui
 from PIL import Image, ImageDraw, ImageFont
 import logging
+import json
 import wexpect
+
+
+COMMAND = r"""powershell -ExecutionPolicy Bypass -command "try { $result = Get-WmiObject WmiMonitorID -Namespace root\wmi -ErrorAction Stop | ForEach-Object { [PSCustomObject]@{ Manufacturer = [System.Text.Encoding]::ASCII.GetString($_.ManufacturerName) -replace '\0'; Model = [System.Text.Encoding]::ASCII.GetString($_.UserFriendlyName) -replace '\0'; SerialNumber = [System.Text.Encoding]::ASCII.GetString($_.SerialNumberID) -replace '\0' } } | ConvertTo-Json; if (-not $result) { Write-Host ''; } else { Write-Host $result; } } catch { Write-Host ''; }" """
 
 # Define necessary constants
 SM_CMONITORS = 80
@@ -33,15 +37,28 @@ if enable_logging:
 
 def get_display_count(safe_monitor_name, child):
     try:
-        child.sendline('dumpedid -a')
-        child.expect('>')
+        child.sendline(COMMAND)
+        child.expect('>')   #add timeout=1 if needed
         output = child.before
-        monitor_names = [line.split(':')[-1].strip() for line in output.split('\n') if 'Monitor Name' in line]
-        return len([_ for _ in monitor_names if _ != safe_monitor_name])
+        f = "Write-Host ''; }\""
+        output = output[output.rfind(f) + len(f): ]
+        if  output.rfind("]") != -1:
+            output = output[ :output.rfind("]") + 1]
+        elif output.rfind("}") != -1:
+            output = output[ :output.rfind("}") + 1]
+        else:
+            return 0
+        
+        output = json.loads(output)
+        if type(output) != list:
+            output = [output]
+        num_displays = len([m for m in output if m["Model"] != safe_monitor_name])
+        
+        return num_displays
     except Exception as e:
         # Log the error
         logging.error(f"Error in get_display_count(): {e}")
-        return -1
+        return 0
 
 def generate_monitor_icon(num_displays):
     try:
@@ -94,7 +111,6 @@ def update_monitor_icon(icon):
     while not stop_monitor_thread.is_set():
         try:
             num_displays = get_display_count(safe_monitor_name, child)
-            
             # Lock PC and show warning if a new monitor is connected
             if num_displays > safe_monitors:
                 icon.title = f"Monitors: {num_displays}" + "\n" + f"Default: {DEFAULT_MONITOR}"
@@ -122,8 +138,7 @@ def update_monitor_icon(icon):
         except Exception as e:
             # Log the error
             logging.error(f"Error in update_monitor_icon(): {e}")
-    child.close()
-            
+    child.sendline('exit')    
 
 def main():
     global update_monitor_event
